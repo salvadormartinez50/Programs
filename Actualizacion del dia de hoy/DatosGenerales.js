@@ -1,4 +1,4 @@
-import { Button, makeStyles, Paper, Typography } from "@material-ui/core";
+import { Button, makeStyles, Paper, Typography, TextField } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import GridContainer from "../../Grid/GridContainer";
@@ -32,6 +32,7 @@ import {
   filtrarDocumentosNoCargados,
 } from "../../../utils/objetos.utils";
 import { useRouter } from "next/router";
+import TextFieldControlledV2 from "../../Form/TextFieldControlledV2";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -76,7 +77,7 @@ const personaFisicaDefault = {
 export default function DatosGenerales({ clickCancelar, esConyuge }) {
   const classes = useStyles();
   const router = useRouter();
-  const { handleSubmit, control, errors, setValue, getValues } = useForm();
+  const { register, handleSubmit, control, formState: { errors }, setValue, getValues } = useForm({ mode: "onChange" });
 
   const [catalogoOcupaciones, setCatalogoOcupaciones] = useState([]);
   const [
@@ -93,8 +94,8 @@ export default function DatosGenerales({ clickCancelar, esConyuge }) {
   const [isLoading, setIsLoading] = useState(false);
   const [idPersonaFisica, setIdPersonaFisica] = useState(null);
   const [ocupacion, setOcupacion] = useState(null);
-  const [nombre, setNombre] = useState(null);
-  const [primerApellido, setPrimerApellido] = useState(null);
+  const [nombreState, setNombre] = useState(null);
+  const [primerApellidoState, setPrimerApellido] = useState(null);
   const [segundoApellido, setSegundoApellido] = useState(null);
   const [alias, setAlias] = useState(null);
   const [curp, setCurp] = useState(null);
@@ -456,6 +457,9 @@ export default function DatosGenerales({ clickCancelar, esConyuge }) {
   };
 
   const generarCURP = () => {
+    const nombre = getValues(getFieldName("nombre"));
+    const primerApellido = getValues(getFieldName("primerApellido"));
+
     const a = calculaCURP(
       nombre,
       primerApellido,
@@ -559,39 +563,29 @@ export default function DatosGenerales({ clickCancelar, esConyuge }) {
                   </GridItem>
 
                   <GridItem xs={12}>
-                    <TextFieldControlled
+                    <TextFieldControlledV2
                       label="Nombre"
-                      name={getFieldName("nombre")}
                       control={control}
-                      value={nombre}
+                      name={getFieldName("nombre")}
                       rules={{
                         required: true,
-                        minLength: 1,
-                        maxLength: 150,
+                        minLength: 2,
+                        maxLength: 150
                       }}
-                      onChange={(e, val) =>
-                        changeFieldValue(e.target.value, "nombre")
-                      }
-                      err={getError("nombre")}
-                    />
+                      err={getError("nombre")}/>
                   </GridItem>
 
                   <GridItem xs={12} md={12} lg={6}>
-                    <TextFieldControlled
+                    <TextFieldControlledV2
                       label="Primer apellido"
-                      name={getFieldName("primerApellido")}
                       control={control}
-                      value={primerApellido}
+                      name={getFieldName("primerApellido")}
                       rules={{
                         required: true,
-                        minLength: 1,
-                        maxLength: 150,
+                        minLength: 2,
+                        maxLength: 150
                       }}
-                      onChange={(e, val) =>
-                        changeFieldValue(e.target.value, "primerApellido")
-                      }
-                      err={getError("primerApellido")}
-                    />
+                      err={getError("primerApellido")}/>
                   </GridItem>
 
                   <GridItem xs={12} md={12} lg={6}>
