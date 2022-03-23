@@ -14,9 +14,9 @@ import {
   Tooltip,
   Typography,
 } from "@material-ui/core";
-import { Delete, Settings, DragHandle } from "@material-ui/icons";
+import { Delete, Settings } from "@material-ui/icons";
 import { useRouter } from "next/router";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import AutocompleteCustom from "../../../components/AdminNotaria/AutocompleteCustom";
 import TextFieldCustom from "../../../components/AdminNotaria/TextFieldCustom";
 import GridContainer from "../../../components/Grid/GridContainer";
@@ -24,7 +24,6 @@ import GridItem from "../../../components/Grid/GridItem";
 import Layout from "../../../components/Interfaz/Layout";
 import { hideLoader, showLoader } from "../../../components/Loader/Loader";
 import HandleComparecencias from "../../../components/Operaciones-v3/Admin/Comparecencias/HandleComparecencias";
-import EntidadMunicipio from "../../../components/Operaciones-v3/EntidadMunicipio";
 import HandleAtributos from "../../../components/Operaciones-v3/Admin/Atributos/HandleAtributos";
 import HandleReglas from "../../../components/Operaciones-v3/Admin/Reglas/HandleReglas";
 import uuid from "react-uuid";
@@ -39,6 +38,7 @@ import { camposValidosOperacionesSettings } from "../../../utils/operacionesUtil
 import NumberFieldCustom from "../../../components/AdminNotaria/NumberFieldCustom";
 import DatePickerCustom from "../../../components/AdminNotaria/DatePickerCustom";
 import { datePickerFormat } from "../../../utils/formateadores";
+import TextAreaCustom from "../../../components/AdminNotaria/TextAreaCustom";
 
 const useStyles = makeStyles((theme) => ({
   listReglas: {
@@ -54,8 +54,8 @@ const ComparecenciaDefault = {
   cantidadMin: 1,
 };
 
-const OperacionMadreDefault = {
-  grupo: null,
+const OperacionEspecificaDefault = {
+  idOperacionSettings: null,
   nombre: "",
   entidadesFederativas: [],
   municipios: [],
@@ -89,12 +89,14 @@ const GastoDefault = {
   concepto: null,
 };
 
-const OperacionMadre = () => {
+const OperacionEspecifica = () => {
   const router = useRouter();
   const classes = useStyles();
   const [isLoading, setIsLoading] = React.useState(false);
-  const [opMadre, setOpMadre] = React.useState(OperacionMadreDefault);
-  const [grupos, setGrupos] = React.useState([]);
+  const [opEspecifica, setOpEspecifica] = React.useState(
+    OperacionEspecificaDefault
+  );
+  const [operacionesMadre, setOperacionesMadre] = React.useState([]);
   const [catComparecencias, setCatComparecencias] = React.useState([]);
   const [catObjetos, setCatObjetos] = React.useState([]);
   const [catDocsSoporte, setCatDocsSoporte] = React.useState([]);
@@ -104,12 +106,6 @@ const OperacionMadre = () => {
   const [catGruposReglas, setCatGruposReglas] = React.useState([]);
   const [catHonorarios, setCatHonorarios] = React.useState([]);
   const [catGastos, setCatGastos] = React.useState([]);
-
-  const coordenadasv2 = React.useRef({ x: null, y: null });
-  const listaOrdenada = useRef([]);
-  const target = useRef();
-  const destino = useRef();
-  const placeholderv2 = useRef();
 
   const breadcrumb = [
     // {
@@ -123,14 +119,15 @@ const OperacionMadre = () => {
       href: "/operaciones-v3/admin",
     },
     {
-      text: "Edición de Operaciones Madre",
+      text: "Edición de Operaciones Específicas",
       color: "inherit",
       href:
-        "/operaciones-v3/admin/operacion-madre" + opMadre?._id
-          ? `?id=${opMadre?._id}`
+        "/operaciones-v3/admin/operacion-especifica" + opEspecifica?._id
+          ? `?id=${opEspecifica?._id}`
           : "",
     },
   ];
+
   React.useEffect(() => {
     if (isLoading) {
       showLoader();
@@ -143,16 +140,16 @@ const OperacionMadre = () => {
     setIsLoading(true);
 
     if (router?.query?.id) {
-      const op = await operacionesV3Service.operacionesMadre.detalle(
+      const op = await operacionesV3Service.operacionesEspecificas.detalle(
         router.query.id
       );
-      setOpMadre(op?._id ? op : OperacionMadreDefault);
+      setOpEspecifica(op?._id ? op : OperacionEspecificaDefault);
     } else {
-      setOpMadre(OperacionMadreDefault);
+      setOpEspecifica(OperacionEspecificaDefault);
     }
 
     await Promise.all([
-      getGrupos(),
+      getOperacionesMadre(),
       getCatComparecenciasSettings(),
       getCatObjetosOperacionSettings(),
       getDocsSoporte(),
@@ -167,9 +164,14 @@ const OperacionMadre = () => {
     setIsLoading(false);
   }, [router?.query?.id]);
 
-  const getGrupos = async () => {
-    const result = await operacionesV3Service.gruposOperaciones.lista();
-    setGrupos(result?.length ? result : []);
+  const getOperacionesMadre = async () => {
+    const result = await operacionesV3Service.catalogos.lista({
+      tipo: "OperacionesMadre",
+      filterOptions: { activo: true },
+      projectionOptions: { _id: 1, nombre: 1 },
+      sortOptions: { nombre: 1 },
+    });
+    setOperacionesMadre(result?.length ? result : []);
   };
 
   const getCatComparecenciasSettings = async () => {
@@ -181,7 +183,6 @@ const OperacionMadre = () => {
         },
         activo: true,
       },
-      projectionOptions: { _id: 1, nombreComparecencia: 1 },
       sortOptions: { nombreComparecencia: 1 },
     });
     setCatComparecencias(result?.length ? result : []);
@@ -222,6 +223,7 @@ const OperacionMadre = () => {
       projectionOptions: { _id: 1, hojaNombre: 1 },
       sortOptions: { hojaNombre: 1 },
     });
+    console.log("PREVIOS", result);
     setCatDocsPrevios(
       result?.length
         ? result?.map((a) => ({ _id: a._id, nombre: a.hojaNombre }))
@@ -240,6 +242,7 @@ const OperacionMadre = () => {
       projectionOptions: { _id: 1, hojaNombre: 1 },
       sortOptions: { hojaNombre: 1 },
     });
+    console.log("PREVIOS", result);
     setCatDocsPostfirma(
       result?.length
         ? result?.map((a) => ({ _id: a._id, nombre: a.hojaNombre }))
@@ -263,7 +266,7 @@ const OperacionMadre = () => {
       filterOptions: { aplicableA: "Operación", activo: true },
       sortOptions: { nombre: 1 },
     });
-    if (result?.length) setCatGruposReglas(result);
+    setCatGruposReglas(result?.length ? result : []);
     setIsLoading(false);
   };
 
@@ -296,7 +299,7 @@ const OperacionMadre = () => {
     )
       return;
     let newList = [];
-    if (opMadre[tipo]?.length) newList = [...opMadre[tipo]];
+    if (opEspecifica[tipo]?.length) newList = [...opEspecifica[tipo]];
     switch (tipo) {
       case "comparecencias":
         newList = [...newList, { ...ComparecenciaDefault, id: uuid() }];
@@ -323,7 +326,7 @@ const OperacionMadre = () => {
         newList = [...newList, { ...AtributoDefault, id: uuid() }];
         break;
     }
-    setOpMadre({ ...opMadre, [tipo]: newList });
+    setOpEspecifica({ ...opEspecifica, [tipo]: newList });
   };
 
   const eliminar = (tipo, { id }) => {
@@ -340,207 +343,55 @@ const OperacionMadre = () => {
       ].indexOf(tipo) === -1
     )
       return;
-    const newList = opMadre[tipo]?.length
-      ? opMadre[tipo]?.filter((a) => a?.id !== id)
+    const newList = opEspecifica[tipo]?.length
+      ? opEspecifica[tipo]?.filter((a) => a?.id !== id)
       : [];
-    setOpMadre({ ...opMadre, [tipo]: newList });
+    setOpEspecifica({ ...opEspecifica, [tipo]: newList });
   };
 
   const getReglaIsChecked = (item) => {
-    const exist = opMadre?.reglas?.find((a) => a?._id === item?._id);
+    const exist = opEspecifica?.reglas?.find((a) => a?._id === item?._id);
     return exist ? true : false;
   };
 
   const checkRegla = (item) => {
-    const exist = opMadre?.reglas?.find((a) => a?._id === item?._id);
+    const exist = opEspecifica?.reglas?.find((a) => a?._id === item?._id);
     let reglas = [];
     if (exist) {
-      reglas = opMadre?.reglas?.filter((a) => a?._id !== item?._id);
+      reglas = opEspecifica?.reglas?.filter((a) => a?._id !== item?._id);
     } else {
-      reglas = [...opMadre?.reglas, item];
+      reglas = [...opEspecifica?.reglas, item];
     }
-    setOpMadre({ ...opMadre, reglas });
+    setOpEspecifica({ ...opEspecifica, reglas });
   };
 
-  // const camposValidos = async () => {
-  //   let msg = "";
-  //   if (
-  //     !opMadre?.comparecencias?.length ||
-  //     opMadre?.comparecencias?.filter((c) => !c?.comparecencia)?.length > 0
-  //   ) {
-  //     msg = "Favor de agregar y seleccionar al menos una comparecencia";
-  //   } else if (
-  //     !opMadre?.objetos?.length ||
-  //     opMadre?.objetos?.filter((c) => !c?.objeto)?.length > 0
-  //   ) {
-  //     msg = "Favor de agregar y seleccionar al menos un objeto";
-  //   } else if (
-  //     !opMadre?.documentosSoporte?.length ||
-  //     opMadre?.documentosSoporte?.filter((c) => !c?.tipoDocumento)?.length > 0
-  //   ) {
-  //     msg = "Favor de agregar y seleccionar al menos un documento soporte";
-  //   } else if (
-  //     !opMadre?.atributos?.length ||
-  //     opMadre?.atributos?.filter((c) => !c?.atributo)?.length > 0
-  //   ) {
-  //     msg = "Favor de agregar y seleccionar al menos un atributo";
-  //   } else if (!opMadre?.reglas?.length) {
-  //     msg = "Favor de seleccionar al menos un grupo de reglas";
-  //   } else if (!(await grupoConReglas())) {
-  //     msg = "Favor de configurar al menos una regla";
-  //   }
-  //   if (msg) {
-  //     ToastWarning(msg);
-  //     return false;
-  //   }
-  //   return true;
-  // };
-
-  // const grupoConReglas = async () => {
-  //   for (const g of opMadre?.reglas) {
-  //     let reglasGrupo = await operacionesV3Service.catalogos.lista({
-  //       tipo: "ReglasOperaciones",
-  //       filterOptions: { "grupo._id": g._id },
-  //       sortOptions: { nombre: 1 },
-  //     });
-  //     if (reglasGrupo?.length > 0) return true;
-  //     return false;
-  //   }
-  // };
-
-  // const limpiarReglasEliminadas = async (om) => {
-  //   let reglas = [];
-  //   if (om?.reglas?.length) {
-  //     for (const r of om?.reglas) {
-  //       let exist = await operacionesV3Service.catalogos.detalle({
-  //         tipo: "ReglasOperaciones",
-  //         data: { _id: r._id },
-  //       });
-  //       console.log("EXIST", exist);
-  //       if (exist?._id) {
-  //         reglas = [...reglas, r];
-  //       }
-  //     }
-  //   }
-  //   return { ...om, reglas };
-  // };
-
-  useEffect(() => {
-    listaOrdenada.current = [...opMadre.atributos];
-
-  }, [opMadre]);
-
-  const mouseDownHandler = (e, id) => {
-    const element = document.getElementById(id);
-    element.style.position = "absolute";
-
-    const draggingRect = element.getBoundingClientRect();
-
-    coordenadasv2.current = {
-      x: e.pageX,
-      y: e.pageY - element.offsetTop
-    };
-
-    target.current = element;
-
-    placeholderv2.current = document.createElement('div');
-    placeholderv2.current.classList.add('placeholder');
-    placeholderv2.current.style.height = `${draggingRect.height}px`;
-
-    target.current.parentNode.insertBefore(
-      placeholderv2.current,
-      target.current.nextSibling
-    )
-
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-  }
-
-  const mouseMoveHandler = (e) => {
-    const y = e.pageY - coordenadasv2.current.y;
-    const x = e.pageX - coordenadasv2.current.x;
-
-    const prevEle = target.current.previousElementSibling;
-    const nextEle = placeholderv2.current.nextElementSibling;
-
-    if (prevEle && isAbove(target.current, prevEle)) {
-      swap(placeholderv2.current, target.current);
-      swap(placeholderv2.current, prevEle);
-    }
-
-    if (nextEle && isAbove(nextEle, target.current)) {
-      swap(nextEle, placeholderv2.current);
-      swap(nextEle, target.current);
-    }
-      
-    target.current.style.top = `${y}px`;
-    target.current.style.left = `${x}px`;
-  }
-
-  const mouseUpHandler = (e) => {
-    target.current.style.removeProperty('top');
-    target.current.style.removeProperty('left');
-    target.current.style.removeProperty('position');
-
-    placeholderv2.current && placeholderv2.current.parentNode.removeChild(placeholderv2.current);
-
-    coordenadasv2.current ={
-      x: null,
-      y: null
-    };
-
-    const parent = target.current.parentNode;
-    const elementsOrdered = [];
-    
-    for(let i=0; i < parent.children.length; i++) {
-      let elemento = listaOrdenada.current.find(e => e.id == parent.children[i].id);
-
-      elementsOrdered.push(elemento);
-    }
-
-    console.log(elementsOrdered);
-    target.current = null;
-
-    document.removeEventListener('mousemove', mouseMoveHandler);
-    document.removeEventListener('mouseup', mouseUpHandler);
-
-    listaOrdenada.current = [...elementsOrdered];
-
-    const copiaMadre = {...opMadre};
-    copiaMadre.atributos = [...listaOrdenada.current];
-    setOpMadre(copiaMadre);
-  }
-
-  const isAbove = (nodeA, nodeB) => {
-    const rectA = nodeA.getBoundingClientRect();
-    const rectB = nodeB.getBoundingClientRect();
-
-    return rectA.top + rectA.height / 2 < rectB.top + rectB.height / 2;
-  }
-
-  const swap = (nodeA, nodeB) => {
-    const parentA = nodeA.parentNode;
-    const siblingA = nodeA.nextSibling === nodeB ? nodeA : nodeA.nextSibling;
-
-    nodeB.parentNode.insertBefore(nodeA, nodeB);
-    parentA.insertBefore(nodeB, siblingA);
-  }
+  //   const getDocSoporteOptionLabel = (opt) => {
+  //     if (opt?.nombreDocumento) return opt.nombreDocumento;
+  //     if (opt?.subTipoDocumento) return opt.subTipoDocumento;
+  //     return "Sin nombre";
+  //   };
 
   const submit = async () => {
     setIsLoading(true);
-    if (!(await camposValidosOperacionesSettings(opMadre))) {
+    if (!(await camposValidosOperacionesSettings(opEspecifica))) {
       setIsLoading(false);
       return;
     }
     let result;
-    if (!opMadre?._id) {
-      result = await operacionesV3Service.operacionesMadre.crear(opMadre);
+    if (!opEspecifica?._id) {
+      result = await operacionesV3Service.operacionesEspecificas.crear(
+        opEspecifica
+      );
     } else {
-      result = await operacionesV3Service.operacionesMadre.actualizar(opMadre);
+      result = await operacionesV3Service.operacionesEspecificas.actualizar(
+        opEspecifica
+      );
     }
     if (result?._id) {
-      router.push("/operaciones-v3/admin/operacion-madre?id=" + result._id);
-      setOpMadre(result);
+      router.push(
+        "/operaciones-v3/admin/operacion-especifica?id=" + result._id
+      );
+      setOpEspecifica(result);
     }
     setIsLoading(false);
   };
@@ -553,12 +404,12 @@ const OperacionMadre = () => {
         return (
           <TextFieldCustom
             label="Valor predeterminado"
-            value={opMadre?.atributos[index]?.valorPredeterminado}
+            value={opEspecifica?.atributos[index]?.valorPredeterminado}
             onChange={(e) => {
-              const atributos = opMadre?.atributos?.map((a, b) =>
+              const atributos = opEspecifica?.atributos?.map((a, b) =>
                 index === b ? { ...a, valorPredeterminado: e.target.value } : a
               );
-              setOpMadre({ ...opMadre, atributos });
+              setOpEspecifica({ ...opEspecifica, atributos });
             }}
           />
         );
@@ -567,12 +418,12 @@ const OperacionMadre = () => {
           <TextFieldCustom
             type="number"
             label="Valor predeterminado"
-            value={opMadre?.atributos[index]?.valorPredeterminado}
+            value={opEspecifica?.atributos[index]?.valorPredeterminado}
             onChange={(e) => {
-              const atributos = opMadre?.atributos?.map((a, b) =>
+              const atributos = opEspecifica?.atributos?.map((a, b) =>
                 index === b ? { ...a, valorPredeterminado: e.target.value } : a
               );
-              setOpMadre({ ...opMadre, atributos });
+              setOpEspecifica({ ...opEspecifica, atributos });
             }}
           />
         );
@@ -590,12 +441,12 @@ const OperacionMadre = () => {
             placeholder="0.00"
             customInput={TextFieldCustom}
             label="Valor predeterminado"
-            value={opMadre?.atributos[index]?.valorPredeterminado}
+            value={opEspecifica?.atributos[index]?.valorPredeterminado}
             onChange={(e) => {
-              const atributos = opMadre?.atributos?.map((a, b) =>
+              const atributos = opEspecifica?.atributos?.map((a, b) =>
                 index === b ? { ...a, valorPredeterminado: e.target.value } : a
               );
-              setOpMadre({ ...opMadre, atributos });
+              setOpEspecifica({ ...opEspecifica, atributos });
             }}
           />
         );
@@ -606,12 +457,12 @@ const OperacionMadre = () => {
             label="Valor predeterminado"
             options={item?.atributo?.opciones}
             getOptionLabel={(opt) => opt}
-            value={opMadre?.atributos[index]?.valorPredeterminado}
+            value={opEspecifica?.atributos[index]?.valorPredeterminado}
             onChange={(e, val) => {
-              const atributos = opMadre?.atributos?.map((a, b) =>
+              const atributos = opEspecifica?.atributos?.map((a, b) =>
                 index === b ? { ...a, valorPredeterminado: val } : a
               );
-              setOpMadre({ ...opMadre, atributos });
+              setOpEspecifica({ ...opEspecifica, atributos });
             }}
           />
         );
@@ -635,12 +486,14 @@ const OperacionMadre = () => {
                     <Switch
                       className={classes.switch}
                       color="primary"
-                      checked={opMadre?.atributos[index]?.valorPredeterminado}
+                      checked={
+                        opEspecifica?.atributos[index]?.valorPredeterminado
+                      }
                       onChange={(e, val) => {
-                        const atributos = opMadre?.atributos?.map((a, b) =>
+                        const atributos = opEspecifica?.atributos?.map((a, b) =>
                           index === b ? { ...a, valorPredeterminado: val } : a
                         );
-                        setOpMadre({ ...opMadre, atributos });
+                        setOpEspecifica({ ...opEspecifica, atributos });
                       }}
                       onClick={(event) => event.stopPropagation()}
                       onFocus={(event) => event.stopPropagation()}
@@ -661,9 +514,9 @@ const OperacionMadre = () => {
           <DatePickerCustom
             label="Valor predeterminado"
             format="DD/MM/YYYY"
-            value={opMadre?.atributos[index]?.valorPredeterminado}
+            value={opEspecifica?.atributos[index]?.valorPredeterminado}
             onChange={(e, val) => {
-              const atributos = opMadre?.atributos?.map((a, b) =>
+              const atributos = opEspecifica?.atributos?.map((a, b) =>
                 index === b
                   ? {
                       ...a,
@@ -675,7 +528,7 @@ const OperacionMadre = () => {
                     }
                   : a
               );
-              setOpMadre({ ...opMadre, atributos });
+              setOpEspecifica({ ...opEspecifica, atributos });
             }}
           />
         );
@@ -687,7 +540,7 @@ const OperacionMadre = () => {
   const MainComponent = () => {
     // if (isLoading) return null;
 
-    if (isLoading && !opMadre?._id) {
+    if (isLoading && !opEspecifica?._id)
       return (
         <GridContainer>
           <GridItem
@@ -695,12 +548,11 @@ const OperacionMadre = () => {
             style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}
           >
             <Alert severity="info" variant="filled">
-              No se encontró la operación madre
+              No se encontró la operación específica
             </Alert>
           </GridItem>
         </GridContainer>
       );
-    }
 
     return (
       <>
@@ -709,7 +561,7 @@ const OperacionMadre = () => {
             <GridItem xs={12} style={{ marginTop: "1.5rem" }} />
 
             <GridItem xs={12}>
-              <Typography variant="h5">Operación Madre</Typography>
+              <Typography variant="h5">Operación Específica</Typography>
             </GridItem>
 
             <GridItem xs={12} style={{ marginTop: "1.5rem" }} />
@@ -717,14 +569,16 @@ const OperacionMadre = () => {
             <GridItem xs={12}>
               <AutocompleteCustom
                 disableClearable={true}
-                label="Grupo de operaciones"
-                options={grupos}
+                label="Operación madre"
+                options={operacionesMadre}
                 getOptionLabel={(opt) => opt?.nombre}
-                value={opMadre?.grupo}
+                value={operacionesMadre?.find(
+                  (a) => a?._id == opEspecifica?.idOperacionSettings
+                )}
                 onChange={(e, val) =>
-                  setOpMadre({
-                    ...opMadre,
-                    grupo: val,
+                  setOpEspecifica({
+                    ...opEspecifica,
+                    idOperacionSettings: val?._id || null,
                   })
                 }
               />
@@ -732,15 +586,33 @@ const OperacionMadre = () => {
 
             <GridItem xs={12}>
               <TextFieldCustom
-                label="Nombre de la operación madre"
-                value={opMadre?.nombre}
+                label="Nombre operación"
+                value={opEspecifica?.nombre}
                 onChange={(e) =>
-                  setOpMadre({ ...opMadre, nombre: e.target.value })
+                  setOpEspecifica({ ...opEspecifica, nombre: e.target.value })
                 }
               />
             </GridItem>
 
-            <EntidadMunicipio operacion={opMadre} setOperacion={setOpMadre} />
+            <GridItem xs={12}>
+              <TextAreaCustom
+                label="Descripción"
+                value={opEspecifica?.descripcion}
+                onChange={(e) =>
+                  setOpEspecifica({
+                    ...opEspecifica,
+                    descripcion: e.target.value,
+                  })
+                }
+                minRows={5}
+                inputProps={undefined}
+              />
+            </GridItem>
+
+            {/* <EntidadMunicipio
+              operacion={opEspecifica}
+              setOperacion={setOpEspecifica}
+            /> */}
 
             <GridItem xs={12} style={{ marginTop: "1.5rem" }} />
 
@@ -763,7 +635,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.comparecencias?.map((item, index) => (
+              {opEspecifica?.comparecencias?.map((item, index) => (
                 <GridContainer key={"comparecencia-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -775,8 +647,8 @@ const OperacionMadre = () => {
                         (a) => a?._id === item?.comparecencia
                       )}
                       onChange={(e, val) => {
-                        const comparecencias = opMadre?.comparecencias?.map(
-                          (a, b) => {
+                        const comparecencias =
+                          opEspecifica?.comparecencias?.map((a, b) => {
                             if (index === b) {
                               return {
                                 ...a,
@@ -784,9 +656,8 @@ const OperacionMadre = () => {
                               };
                             }
                             return a;
-                          }
-                        );
-                        setOpMadre({ ...opMadre, comparecencias });
+                          });
+                        setOpEspecifica({ ...opEspecifica, comparecencias });
                       }}
                       onOpen={() => getCatComparecenciasSettings()}
                     />
@@ -797,8 +668,8 @@ const OperacionMadre = () => {
                       label="Cantidad mínima"
                       value={item?.cantidadMin}
                       onChange={(e) => {
-                        const comparecencias = opMadre?.comparecencias?.map(
-                          (a, b) => {
+                        const comparecencias =
+                          opEspecifica?.comparecencias?.map((a, b) => {
                             if (index === b) {
                               return {
                                 ...a,
@@ -806,9 +677,8 @@ const OperacionMadre = () => {
                               };
                             }
                             return a;
-                          }
-                        );
-                        setOpMadre({ ...opMadre, comparecencias });
+                          });
+                        setOpEspecifica({ ...opEspecifica, comparecencias });
                       }}
                       min={1}
                     />
@@ -864,7 +734,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.objetos?.map((item, index) => (
+              {opEspecifica?.objetos?.map((item, index) => (
                 <GridContainer key={"objeto-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -874,7 +744,7 @@ const OperacionMadre = () => {
                       getOptionLabel={(opt) => opt?.nombre}
                       value={catObjetos?.find((a) => a?._id === item?.objeto)}
                       onChange={(e, val) => {
-                        const objetos = opMadre?.objetos?.map((a, b) => {
+                        const objetos = opEspecifica?.objetos?.map((a, b) => {
                           if (index === b) {
                             return {
                               ...a,
@@ -883,7 +753,7 @@ const OperacionMadre = () => {
                           }
                           return a;
                         });
-                        setOpMadre({ ...opMadre, objetos });
+                        setOpEspecifica({ ...opEspecifica, objetos });
                       }}
                       onOpen={() => getCatObjetosOperacionSettings()}
                     />
@@ -894,7 +764,7 @@ const OperacionMadre = () => {
                       label="Cantidad mínima"
                       value={item?.cantidadMin}
                       onChange={(e) => {
-                        const objetos = opMadre?.objetos?.map((a, b) => {
+                        const objetos = opEspecifica?.objetos?.map((a, b) => {
                           if (index === b) {
                             return {
                               ...a,
@@ -903,7 +773,7 @@ const OperacionMadre = () => {
                           }
                           return a;
                         });
-                        setOpMadre({ ...opMadre, objetos });
+                        setOpEspecifica({ ...opEspecifica, objetos });
                       }}
                       min={1}
                     />
@@ -959,7 +829,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.documentosSoporte?.map((item, index) => (
+              {opEspecifica?.documentosSoporte?.map((item, index) => (
                 <GridContainer key={"doc-soporte-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -967,20 +837,23 @@ const OperacionMadre = () => {
                       label="Tipo de documento"
                       options={catDocsSoporte}
                       getOptionLabel={(opt) => opt}
-                      //   getOptionSelected={(opt, val) => opt?._id === val?._id}
+                      // getOptionSelected={(opt, val) => opt?._id === val?._id}
                       value={item?.tipoDocumento}
                       onChange={(e, val) => {
                         const documentosSoporte =
-                          opMadre?.documentosSoporte?.map((a, b) => {
+                          opEspecifica?.documentosSoporte?.map((a, b) => {
                             if (index === b) {
                               return {
                                 ...a,
-                                tipoDocumento: val,
+                                tipoDocumento: val || null,
                               };
                             }
                             return a;
                           });
-                        setOpMadre({ ...opMadre, documentosSoporte });
+                        setOpEspecifica({
+                          ...opEspecifica,
+                          documentosSoporte,
+                        });
                       }}
                       onOpen={() => getDocsSoporte()}
                     />
@@ -1008,16 +881,21 @@ const OperacionMadre = () => {
                                 checked={item?.requerido}
                                 onChange={(e, val) => {
                                   const documentosSoporte =
-                                    opMadre?.documentosSoporte?.map((a, b) => {
-                                      if (index === b) {
-                                        return {
-                                          ...a,
-                                          requerido: val,
-                                        };
+                                    opEspecifica?.documentosSoporte?.map(
+                                      (a, b) => {
+                                        if (index === b) {
+                                          return {
+                                            ...a,
+                                            requerido: val,
+                                          };
+                                        }
+                                        return a;
                                       }
-                                      return a;
-                                    });
-                                  setOpMadre({ ...opMadre, documentosSoporte });
+                                    );
+                                  setOpEspecifica({
+                                    ...opEspecifica,
+                                    documentosSoporte,
+                                  });
                                 }}
                                 onClick={(event) => event.stopPropagation()}
                                 onFocus={(event) => event.stopPropagation()}
@@ -1081,7 +959,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.documentosPrevios?.map((item, index) => (
+              {opEspecifica?.documentosPrevios?.map((item, index) => (
                 <GridContainer key={"doc-previos-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -1092,7 +970,7 @@ const OperacionMadre = () => {
                       value={item?.tipoDocumento}
                       onChange={(e, val) => {
                         const documentosPrevios =
-                          opMadre?.documentosPrevios?.map((a, b) => {
+                          opEspecifica?.documentosPrevios?.map((a, b) => {
                             if (index === b) {
                               return {
                                 ...a,
@@ -1101,7 +979,10 @@ const OperacionMadre = () => {
                             }
                             return a;
                           });
-                        setOpMadre({ ...opMadre, documentosPrevios });
+                        setOpEspecifica({
+                          ...opEspecifica,
+                          documentosPrevios,
+                        });
                       }}
                       onOpen={() => getDocsPrevios()}
                     />
@@ -1129,16 +1010,21 @@ const OperacionMadre = () => {
                                 checked={item?.requerido}
                                 onChange={(e, val) => {
                                   const documentosPrevios =
-                                    opMadre?.documentosPrevios?.map((a, b) => {
-                                      if (index === b) {
-                                        return {
-                                          ...a,
-                                          requerido: val,
-                                        };
+                                    opEspecifica?.documentosPrevios?.map(
+                                      (a, b) => {
+                                        if (index === b) {
+                                          return {
+                                            ...a,
+                                            requerido: val,
+                                          };
+                                        }
+                                        return a;
                                       }
-                                      return a;
-                                    });
-                                  setOpMadre({ ...opMadre, documentosPrevios });
+                                    );
+                                  setOpEspecifica({
+                                    ...opEspecifica,
+                                    documentosPrevios,
+                                  });
                                 }}
                                 onClick={(event) => event.stopPropagation()}
                                 onFocus={(event) => event.stopPropagation()}
@@ -1202,7 +1088,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.documentosPostfirma?.map((item, index) => (
+              {opEspecifica?.documentosPostfirma?.map((item, index) => (
                 <GridContainer key={"doc-postfirma-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -1213,7 +1099,7 @@ const OperacionMadre = () => {
                       value={item?.tipoDocumento}
                       onChange={(e, val) => {
                         const documentosPostfirma =
-                          opMadre?.documentosPostfirma?.map((a, b) => {
+                          opEspecifica?.documentosPostfirma?.map((a, b) => {
                             if (index === b) {
                               return {
                                 ...a,
@@ -1222,7 +1108,10 @@ const OperacionMadre = () => {
                             }
                             return a;
                           });
-                        setOpMadre({ ...opMadre, documentosPostfirma });
+                        setOpEspecifica({
+                          ...opEspecifica,
+                          documentosPostfirma,
+                        });
                       }}
                       onOpen={() => getDocsPostfirma()}
                     />
@@ -1250,7 +1139,7 @@ const OperacionMadre = () => {
                                 checked={item?.requerido}
                                 onChange={(e, val) => {
                                   const documentosPostfirma =
-                                    opMadre?.documentosPostfirma?.map(
+                                    opEspecifica?.documentosPostfirma?.map(
                                       (a, b) => {
                                         if (index === b) {
                                           return {
@@ -1261,8 +1150,8 @@ const OperacionMadre = () => {
                                         return a;
                                       }
                                     );
-                                  setOpMadre({
-                                    ...opMadre,
+                                  setOpEspecifica({
+                                    ...opEspecifica,
                                     documentosPostfirma,
                                   });
                                 }}
@@ -1328,7 +1217,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.honorarios?.map((item, index) => (
+              {opEspecifica?.honorarios?.map((item, index) => (
                 <GridContainer key={"honorarios-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -1338,16 +1227,18 @@ const OperacionMadre = () => {
                       getOptionLabel={(opt) => opt?.nombre}
                       value={item?.concepto}
                       onChange={(e, val) => {
-                        const honorarios = opMadre?.honorarios?.map((a, b) => {
-                          if (index === b) {
-                            return {
-                              ...a,
-                              concepto: val || null,
-                            };
+                        const honorarios = opEspecifica?.honorarios?.map(
+                          (a, b) => {
+                            if (index === b) {
+                              return {
+                                ...a,
+                                concepto: val || null,
+                              };
+                            }
+                            return a;
                           }
-                          return a;
-                        });
-                        setOpMadre({ ...opMadre, honorarios });
+                        );
+                        setOpEspecifica({ ...opEspecifica, honorarios });
                       }}
                       onOpen={() => getCatHonorarios()}
                     />
@@ -1400,7 +1291,7 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre?.gastos?.map((item, index) => (
+              {opEspecifica?.gastos?.map((item, index) => (
                 <GridContainer key={"gastos-operacion-" + index}>
                   <GridItem xs={6}>
                     <AutocompleteCustom
@@ -1410,7 +1301,7 @@ const OperacionMadre = () => {
                       getOptionLabel={(opt) => opt?.nombre}
                       value={item?.concepto}
                       onChange={(e, val) => {
-                        const gastos = opMadre?.gastos?.map((a, b) => {
+                        const gastos = opEspecifica?.gastos?.map((a, b) => {
                           if (index === b) {
                             return {
                               ...a,
@@ -1419,7 +1310,7 @@ const OperacionMadre = () => {
                           }
                           return a;
                         });
-                        setOpMadre({ ...opMadre, gastos });
+                        setOpEspecifica({ ...opEspecifica, gastos });
                       }}
                       onOpen={() => getCatGastos()}
                     />
@@ -1473,19 +1364,18 @@ const OperacionMadre = () => {
             </GridItem>
 
             <GridItem xs={12}>
-              {opMadre.atributos?.map((item, index) => {
-                const key = `${item.id}`
-                return (
-                  <GridContainer key={key} id={key}>
-                    <GridItem xs={6}>
-                      <AutocompleteCustom
-                        disableClearable={true}
-                        label="Nombre del atributo"
-                        options={catAtributos}
-                        getOptionLabel={(opt) => opt?.nombre}
-                        value={item?.atributo}
-                        onChange={(e, val) => {
-                          const atributos = opMadre?.atributos?.map((a, b) => {
+              {opEspecifica?.atributos?.map((item, index) => (
+                <GridContainer key={"atributo-operacion-" + index}>
+                  <GridItem xs={6}>
+                    <AutocompleteCustom
+                      disableClearable={true}
+                      label="Nombre del atributo"
+                      options={catAtributos}
+                      getOptionLabel={(opt) => opt?.nombre}
+                      value={item?.atributo}
+                      onChange={(e, val) => {
+                        const atributos = opEspecifica?.atributos?.map(
+                          (a, b) => {
                             if (index === b) {
                               return {
                                 ...a,
@@ -1493,39 +1383,32 @@ const OperacionMadre = () => {
                               };
                             }
                             return a;
-                          });
-                          setOpMadre({ ...opMadre, atributos });
-                        }}
-                        onOpen={() => getAtributos()}/>
-                    </GridItem>
-                    <GridItem xs={3} align="center">
-                      {DefaultValueComponent(item, index)}
-                    </GridItem>
-                    <GridItem xs={3}>
-                      <Tooltip title="Mover atributo">
-                        <IconButton
-                          type="button"
-                          color="primary"
-                          onMouseDown={(e) => mouseDownHandler(e, key)}
-                          style={{ marginTop: "1rem" }}
-                        >
-                          <DragHandle />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar atributo">
-                        <IconButton
-                          type="button"
-                          color="primary"
-                          onClick={() => eliminar("atributos", item)}
-                          style={{ marginTop: "1rem" }}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </GridItem>
-                  </GridContainer>
-                )
-              })}
+                          }
+                        );
+                        setOpEspecifica({ ...opEspecifica, atributos });
+                      }}
+                      onOpen={() => getAtributos()}
+                    />
+                  </GridItem>
+
+                  <GridItem xs={3} align="center">
+                    {DefaultValueComponent(item, index)}
+                  </GridItem>
+
+                  <GridItem xs={3}>
+                    <Tooltip title="Eliminar atributo">
+                      <IconButton
+                        type="button"
+                        color="primary"
+                        onClick={() => eliminar("atributos", item)}
+                        style={{ marginTop: "1rem" }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  </GridItem>
+                </GridContainer>
+              ))}
             </GridItem>
 
             <GridItem xs={12} style={{ marginTop: "1.5rem" }} />
@@ -1580,11 +1463,6 @@ const OperacionMadre = () => {
                     </ListItem>
                   );
                 })}
-                {!catGruposReglas?.length ? (
-                  <Typography>
-                    No hay reglas dadas de alta en el sistema
-                  </Typography>
-                ) : null}
               </List>
             </GridItem>
 
@@ -1592,22 +1470,20 @@ const OperacionMadre = () => {
           </GridContainer>
         </Paper>
 
-        <GridContainer>
-          <GridItem
-            xs={12}
-            style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}
-            align="center"
+        <GridItem
+          xs={12}
+          style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}
+          align="center"
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={() => submit()}
           >
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={() => submit()}
-            >
-              Guardar
-            </Button>
-          </GridItem>
-        </GridContainer>
+            Guardar
+          </Button>
+        </GridItem>
       </>
     );
   };
@@ -1641,4 +1517,4 @@ const OperacionMadre = () => {
   );
 };
 
-export default OperacionMadre;
+export default OperacionEspecifica;
