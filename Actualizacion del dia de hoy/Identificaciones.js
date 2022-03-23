@@ -7,6 +7,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import { CatAnioEmision, CatAnioVigencia } from "../../../utils/catalogos";
 import { Controller } from "react-hook-form";
 import TextFieldControlled from "../../Form/TextFieldControlled";
+import TextFieldControlledV2 from "../../Form/TextFieldControlledV2";
 import DatePickerControlled from "../../Form/DatePickerControlled";
 import { datePickerFormat } from "../../../utils/formateadores";
 import AlertDialog from "../../common/AlertDialog";
@@ -190,7 +191,7 @@ export default function Identificaciones(props) {
               </GridItem>
 
               <GridItem className={"ux-grid-aligned"} xs={12}>
-                <TextFieldControlled
+                {/* <TextFieldControlled
                   label="Entidad emisora"
                   control={control}
                   name={getFieldName("tipoDocumento.entidadEmisora", index)}
@@ -206,7 +207,15 @@ export default function Identificaciones(props) {
                     )
                   }
                   err={getError("tipoDocumento.entidadEmisora", index)}
-                />
+                /> */}
+                <TextFieldControlledV2
+                  label="Entidad emisora"
+                  control={control}
+                  name={getFieldName("tipoDocumento.entidadEmisora", index)}
+                  rules={{
+                    required: true
+                  }}
+                  err={getError("tipoDocumento.entidadEmisora", index)}/>
               </GridItem>
 
               <GridItem className={"ux-grid-aligned"} xs={12} md={12} lg={6}>
