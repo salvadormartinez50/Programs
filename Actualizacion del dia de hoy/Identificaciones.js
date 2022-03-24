@@ -219,7 +219,7 @@ export default function Identificaciones(props) {
               </GridItem>
 
               <GridItem className={"ux-grid-aligned"} xs={12} md={12} lg={6}>
-                <TextFieldControlled
+               {/* <TextFieldControlled
                   label="Número de documento"
                   name={getFieldName("numeroIdentificacion", index)}
                   control={control}
@@ -236,7 +236,16 @@ export default function Identificaciones(props) {
                     onChange(e.target.value, "numeroIdentificacion", index)
                   }
                   err={getError("numeroIdentificacion", index)}
-                />
+                />*/}
+                 <TextFieldControlledV2
+                  label="Número de documento"
+                  control={control}
+                  value={item.numeroIdentificacion}
+                  name={getFieldName("tipoDocumento.numeroIdentificacion", index)}
+                  rules={{
+                    required: true
+                  }}
+                  err={getError("tipoDocumento.numeroIdentificacion", index)}/>
               </GridItem>
 
               <GridItem className={"ux-grid-aligned"} xs={12} md={12} lg={6}>
