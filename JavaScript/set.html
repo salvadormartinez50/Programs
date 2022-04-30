@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Set</h1>
+        <h2>We create the Set: const letters = new Set (["a", "b"]) and add elements</h2>
+        <p id="demo">
+            <p id="demo2"></p>
+            <p id="demo3"></p>
+            <p >We put letter into a a variable named text</p>
+            <p id="letters"></p>
+
+        </p>
+        <script>
+            //We create the Set
+            const letters = new Set (["a", "b"]);
+            
+            //We can add String elemnts
+            letters.add("c");
+            
+            //Or we can add an element of type variable
+            var casa = "home";
+            letters.add(casa);
+            
+            
+            //We can list all elements, where the method value() returns an Iterator object containing all the values in a Set an with that Now we can use the Iterator object to access the elements. And the keys() make the same, create an iterating set values
+            let texto = "";
+           for(const x of letters.values()){
+               texto += x + "<br>";
+           }
+
+           let texto2 = "";
+           for(const x of letters.keys()){
+               texto2 += x + "<br>";
+           }
+
+            //Other way to list all elements
+            let text = "", i = 0;
+            letters.forEach(function(values){
+                 text += `text[${i}]=${values}<br>`;
+                 i++;
+            })
+
+
+            //So we can display the set size.
+            document.getElementById("demo").innerHTML=`Size of letters is:  ${letters.size}`;
+            document.getElementById("demo2").innerHTML=` Now using the values() method we create an iterator object <br>letters is: <br> ${texto}`;
+            document.getElementById("demo3").innerHTML=` Now using the keys() method  we create an iterator object make the same that values() method. This makes Sets compatible with Maps. <br>letters is: <br> ${texto2}`;
+            document.getElementById("letters").innerHTML=text;
+        </script>
+    </body>
+</html>

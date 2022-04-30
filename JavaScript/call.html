@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>The JavaScript <i>this</i> Keyword</h1>
+<p>In this example <strong>this</strong> refers to person2, even if it is a method of person1:</p>
+
+<p id="demo"></p>
+<p id="demo1"></p>
+<p id="demo2"></p>
+<p id="demo3"></p>
+
+<script>
+    "use strict";
+const person1 = {
+firstName:"Juan",
+  lastName: "sam",
+  fullName: function() {
+    return this.firstName + " " + this.lastName;
+  }
+}
+
+const person2 = {
+  firstName:"John",
+  lastName: "Doe",
+}
+
+const member = {
+  firstName:"Hege",
+  lastName: "Nilsen",
+}
+
+let x = person1.fullName.call(person2); 
+let fullName = person1.fullName.bind(person1); 
+document.getElementById("demo").innerHTML = x; 
+document.getElementById("demo1").innerHTML = person1.fullName(); 
+document.getElementById("demo2").innerHTML = fullName(); 
+document.getElementById("demo3").innerHTML = person1.fullName.bind(member)(); 
+</script>
+
+</body>
+</html>

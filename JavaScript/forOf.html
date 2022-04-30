@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>JavaScript Iterables</h2>
+    <p>Iterate over a String and an Array</p>
+
+    <p id="demo"></p>
+    <p id="demo2"></p>
+
+    <script>
+      // Create a String
+      const name = "W3Schools";
+
+      // List all Elements
+      let text = "";
+      for (const x of name) {
+        text += x + "<br>";
+      }
+
+      document.getElementById("demo").innerHTML = text;
+
+      // Create an Array
+      const letters = ["a", "b", "c"];
+
+      // List all Elements
+      let text2 = "";
+      for (const x of letters) {
+        text += x + "<br>";
+      }
+
+      document.getElementById("demo2").innerHTML = text2;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>JavaScript For Of Loop</h2>
+
+    <p>The for of statement loops through the values of an iterable object.</p>
+
+    <p id="demo"></p>
+    <p id="demo2"></p>
+
+    <script>
+      let language = "JavaScript";
+
+      let text = "";
+      for (let x of language) {
+        text += x + "<br>";
+      }
+
+      document.getElementById("demo").innerHTML = text;
+      console.log("text = " + text);
+      console.log(typeof text);
+      console.log(text.length);
+      let i,
+        length = text.length,
+        texto = "";
+      for (i = 0; i < length; i += 5) {
+        texto += text[i];
+      }
+      document.getElementById("demo2").innerHTML = texto;
+      console.log(texto);
+    </script>
+  </body>
+</html>

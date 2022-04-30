@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>With "use strict":</h2>
+<h3>Writing to a read-only property is not allowed.</h3>
+
+<p>Activate debugging in your browser (F12) to see the error report.</p>
+
+<script>
+"use strict";
+const obj = {};
+try {
+    Object.defineProperty(obj, "x", {value:0, writable:false});// when we put value:0 indicates that cannot is possible write in a read only property at least we put writable:true
+
+obj.x = 3.14; // This will cause an error and the value of "x" will remain as 0.
+} catch (error) {
+    console.log(error);
+}
+
+console.log(obj.x);
+</script>
+
+</body>
+</html>

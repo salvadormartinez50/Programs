@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Descarga</title>
+</head>
+<body>
+
+<h1>Descarga</h1>
+<p>Dar click en descargar ara ver el archivo.</p>
+
+<a href="https://blobplataformadev.blob.core.windows.net/documentos/4526706e-7aef-c6b7-6416-72725feee396docx" download> Descargar </a> 
+
+<script>
+    
+var URL = "https://blobplataformadev.blob.core.windows.net/documentos/4526706e-7aef-c6b7-6416-72725feee396docx";
+    const blob = new Blob([output]);                   // Step 3
+    const fileDownloadUrl = URL.createObjectURL(blob); // Step 4
+    this.setState ({fileDownloadUrl: fileDownloadUrl}, // Step 5
+      () => {
+        this.dofileDownload.click();                   // Step 6
+        URL.revokeObjectURL(fileDownloadUrl);          // Step 7
+        this.setState({fileDownloadUrl: ""})
+    })
+</script> 
+// The hidden anchor element:
+    <a style={{display: "none"}}
+         download={this.fileNames[this.state.fileType]}
+         href={this.state.fileDownloadUrl}
+         ref={e=>this.dofileDownload = e}
+    >download it</a>
+
+   
+
+
+</body>
+</html>
