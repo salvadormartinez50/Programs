@@ -1,5 +1,8 @@
 package src;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 public class Hello {
 	
 	//@SuppressWarnings("static-access")
@@ -47,13 +50,55 @@ public class Hello {
 	    System.out.println(myObj2.x);
 	    
 	    System.out.println("Using Speed");
-	    int newSpeed = 34;
+	    
+	    int newSpeed = 134;
 	    var speed = new Speed();
 	    System.out.println(speed.getSpeed());// here only print the default value, it is not initialized
 	    speed.setSpeed(newSpeed);
 	    System.out.println(speed.getSpeed());
+	    
+	    Car car54 = new Car();
+	    car54.setName("Car 54");
+	    car54.setSpeed(newSpeed );
+	    car54.setManufactured(LocalDate.of(1961, 9, 17));
+	    System.out.println(Car.MAX_SPEED);
 		
-		
+	    
+	    // other way to initialize attributes with a different signature 
+	    Car mach5 = new Car("Mach V", 260, 21, true);
+	   // mach5.setName("Mach V"); with the new constructor-signature it is no more necessary
+	   // mach5.setSpeed(250);     with the new constructor-signature it is no more necessary
+	    mach5.setManufactured(LocalDate.of(1967, 4, 2));
+	    
+	    for (Car car: new Car[] {car54, mach5}) {
+	    	System.out.printf(" %s  is %d years old and is traveling at %d mph %n", car.getName(), car.getAge(), car.getSpeed());
+	    }
+	    
+	    mach5.setTirePressures(new int[] {32, 32, 40, 50, 80});
+	    //or when we use ellipsis in the setTirePressures() method, we can make a call using several arguments
+	    mach5.setTirePressures(32, 32, 40 ,50);
+		//System.out.println(mach5.);
+	    
+	    System.out.println("handling Dates");
+	    Fecha fechaDeNaciminto = new Fecha();
+	    fechaDeNaciminto.setFecha(LocalDate.of(1971, 3, 12));
+	    
+	    System.out.println(fechaDeNaciminto.getFecha());
+	    //System.out.printf("%d, fechaDeNaciminto.getFecha()");
+	    System.out.println(LocalDate.now());
+	    System.out.println(LocalDate.now().getYear());
+	    System.out.println(Period.between(fechaDeNaciminto.getFecha(), LocalDate.now()).getYears());
+	    
+	    System.out.println("");
+	    System.out.println("handing Business Methods");
+	    
+	    // Application of the Business Method
+	    double height = 022;
+	    double width = 23;
+	    double length = 12;
+		Box myBox = new Box(height, width, length);
+		System.out.println( myBox.printBox());
+	    
 	}
 
 }
